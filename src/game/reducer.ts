@@ -1,21 +1,26 @@
-import { TOTAL_DAYS, getScenario, pointsFor } from '../data/scenarios'
-import type { GameState } from '../types/game'
+import { QUESTION_SEQUENCE, TOTAL_STEPS, isLastStepOfDay, pointsFor } from '../data/scenarios'
+import type { AnswerRecord, GameState, OptionId } from '../types/game'
+import { QUESTION_MS } from './timing'
 
+/*
+ * Timed actions carry `at` (Date.now() at dispatch) so the reducer stays pure,
+ * and `step` so a late timer or click aimed at an earlier question is ignored.
+ */
 export type GameAction =
-  | { type: 'START' }
-  | { type: 'SELECT'; optionId: string }
-  | { type: 'CONFIRM' }
-  | { type: 'CONTINUE' }
-  | { type: 'NEXT_DAY' }
+  | { type: 'START'; at: number }
+  | { type: 'ANSWER'; step: number; optionId: OptionId; at: number }
+  | { type: 'TIMEOUT'; step: number; at: number }
+  | { type: 'CONTINUE'; step: number; at: number }
+  | { type: 'NEXT_DAY'; at: number }
   | { type: 'TO_REFLECTION' }
   | { type: 'REFLECT'; choice: string }
-  | { type: 'RESTART' }
+  | { type: 'RESTART'; at: number }
   | { type: 'HOME' }
 
 export const initialState: GameState = {
   screen: 'START',
-  currentDayIndex: 0,
-  currentTeam: 'A',
+  step: 0,
+  questionDeadline: null,
   selectedAnswer: null,
   showFeedback: false,
   scores: { A: 0, B: 0 },
@@ -25,67 +30,76 @@ export const initialState: GameState = {
   gameFinished: false,
 }
 
-const firstQuestion: GameState = { ...initialState, screen: 'QUESTION' }
+const openQuestion = (state: GameState, step: number, at: number): GameState => ({
+  ...state,
+  screen: 'QUESTION',
+  step,
+  questionDeadline: at + QUESTION_MS,
+  selectedAnswer: null,
+  showFeedback: false,
+})
+
+/** Lock the current question with an answer (or null = timeout), score it, and open feedback. */
+function lockQuestion(state: GameState, optionId: OptionId | null): GameState {
+  const question = QUESTION_SEQUENCE[state.step]
+  if (state.history.some((h) => h.questionId === question.id)) return state
+
+  const points = optionId ? pointsFor(question, optionId) : 0
+  const outcome = optionId === null ? 'TIMEOUT' : optionId === question.correct ? 'CORRECT' : 'INCORRECT'
+  const record: AnswerRecord = {
+    questionId: question.id,
+    day: question.day,
+    team: question.team,
+    optionId,
+    outcome,
+    correct: outcome === 'CORRECT',
+    points,
+  }
+  return {
+    ...state,
+    screen: 'FEEDBACK',
+    questionDeadline: null,
+    selectedAnswer: optionId,
+    showFeedback: true,
+    scores: { ...state.scores, [question.team]: state.scores[question.team] + points },
+    history: [...state.history, record],
+    lastAnswer: record,
+  }
+}
 
 /**
- * Every transition is guarded by the current screen, so a repeated dispatch
- * (double click, key repeat) is a no-op — points can only be added once per
- * question, on the single QUESTION → FEEDBACK transition.
+ * Every transition is guarded by the current screen (and step / deadline for
+ * timed actions), so duplicate dispatches — double clicks, a click racing the
+ * timeout, a double click on “Tiếp tục” — are no-ops. Points can only
+ * be added once per question, on the single QUESTION → FEEDBACK transition.
  */
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'START':
-      return state.screen === 'START' ? firstQuestion : state
+      return state.screen === 'START' ? openQuestion(initialState, 0, action.at) : state
 
-    case 'SELECT':
-      return state.screen === 'QUESTION' ? { ...state, selectedAnswer: action.optionId } : state
-
-    case 'CONFIRM': {
-      if (state.screen !== 'QUESTION' || !state.selectedAnswer) return state
-      const scenario = getScenario(state.currentDayIndex, state.currentTeam)
-      const option = scenario.options.find((o) => o.id === state.selectedAnswer)
-      if (!option) return state
-      if (state.history.some((h) => h.scenarioId === scenario.id)) return state
-
-      const points = pointsFor(option, scenario)
-      const record = {
-        scenarioId: scenario.id,
-        day: scenario.day,
-        team: state.currentTeam,
-        optionId: option.id,
-        suitability: option.suitability,
-        points,
-      }
-      return {
-        ...state,
-        screen: 'FEEDBACK',
-        showFeedback: true,
-        scores: { ...state.scores, [state.currentTeam]: state.scores[state.currentTeam] + points },
-        history: [...state.history, record],
-        lastAnswer: record,
-      }
+    case 'ANSWER': {
+      if (state.screen !== 'QUESTION' || action.step !== state.step || state.questionDeadline === null) return state
+      // A click processed at or after the deadline counts as no answer.
+      const optionId = action.at < state.questionDeadline ? action.optionId : null
+      return lockQuestion(state, optionId)
     }
 
+    case 'TIMEOUT':
+      if (state.screen !== 'QUESTION' || action.step !== state.step || state.questionDeadline === null) return state
+      if (action.at < state.questionDeadline) return state
+      return lockQuestion(state, null)
+
     case 'CONTINUE': {
-      if (state.screen !== 'FEEDBACK') return state
-      const reset = { selectedAnswer: null, showFeedback: false }
-      if (state.currentTeam === 'A') {
-        return { ...state, ...reset, screen: 'QUESTION', currentTeam: 'B' }
-      }
-      const isLastDay = state.currentDayIndex === TOTAL_DAYS - 1
-      return isLastDay
-        ? { ...state, ...reset, screen: 'FINAL_RESULT', gameFinished: true }
-        : { ...state, ...reset, screen: 'DAY_COMPLETE' }
+      if (state.screen !== 'FEEDBACK' || action.step !== state.step) return state
+      const closed = { ...state, selectedAnswer: null, showFeedback: false }
+      if (state.step === TOTAL_STEPS - 1) return { ...closed, screen: 'FINAL_RESULT', gameFinished: true }
+      if (isLastStepOfDay(state.step)) return { ...closed, screen: 'DAY_COMPLETE' }
+      return openQuestion(state, state.step + 1, action.at)
     }
 
     case 'NEXT_DAY':
-      if (state.screen !== 'DAY_COMPLETE') return state
-      return {
-        ...state,
-        screen: 'QUESTION',
-        currentDayIndex: state.currentDayIndex + 1,
-        currentTeam: 'A',
-      }
+      return state.screen === 'DAY_COMPLETE' ? openQuestion(state, state.step + 1, action.at) : state
 
     case 'TO_REFLECTION':
       return state.screen === 'FINAL_RESULT' ? { ...state, screen: 'REFLECTION' } : state
@@ -94,7 +108,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return state.screen === 'REFLECTION' ? { ...state, reflection: action.choice } : state
 
     case 'RESTART':
-      return firstQuestion
+      return openQuestion(initialState, 0, action.at)
 
     case 'HOME':
       return initialState

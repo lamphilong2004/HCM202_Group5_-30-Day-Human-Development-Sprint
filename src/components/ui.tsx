@@ -1,6 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import { SUITABILITY_META } from '../data/scenarios'
-import type { Suitability, Team } from '../types/game'
+import type { Outcome, Team } from '../types/game'
 
 export const TEAM_STYLE: Record<
   Team,
@@ -67,25 +66,45 @@ export function Arrow() {
   )
 }
 
-/** Three-step meter: ●●● best, ●●○ good, ●○○ consider. */
-export function SuitabilityMeter({
-  suitability,
-  tone = 'dark',
+export const RESULT_LABEL: Record<Outcome, string> = {
+  CORRECT: 'Chính xác',
+  INCORRECT: 'Chưa chính xác',
+  TIMEOUT: 'Hết giờ',
+}
+
+/** Round check / cross / clock mark; `tone` picks contrast for dark or paper surfaces. */
+export function ResultMark({
+  outcome,
   size = 'md',
+  tone = 'dark',
 }: {
-  suitability: Suitability
-  tone?: 'dark' | 'paper'
+  outcome: Outcome
   size?: 'sm' | 'md'
+  tone?: 'dark' | 'paper'
 }) {
-  const { level, label } = SUITABILITY_META[suitability]
-  const on = tone === 'dark' ? 'bg-teal' : 'bg-teal-deep'
-  const off = tone === 'dark' ? 'bg-line' : 'bg-paper-2'
-  const dims = size === 'sm' ? 'h-1.5 w-4' : 'h-2 w-8'
+  const dims = size === 'sm' ? 'size-5' : 'size-9'
+  const icon = size === 'sm' ? 'size-3' : 'size-5'
+  const color =
+    outcome === 'CORRECT'
+      ? tone === 'dark'
+        ? 'bg-teal text-ink'
+        : 'bg-teal-deep text-paper'
+      : outcome === 'TIMEOUT'
+        ? 'border-2 border-dashed border-red/70 text-red'
+        : tone === 'dark'
+          ? 'border-2 border-line text-mist'
+          : 'border-2 border-stone/40 text-stone'
   return (
-    <span className="inline-flex gap-1" role="img" aria-label={label}>
-      {[1, 2, 3].map((i) => (
-        <span key={i} className={`${dims} rounded-full ${i <= level ? on : off}`} />
-      ))}
+    <span
+      role="img"
+      aria-label={RESULT_LABEL[outcome]}
+      className={`${dims} ${color} inline-grid shrink-0 place-items-center rounded-full`}
+    >
+      <svg viewBox="0 0 16 16" className={icon} fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+        {outcome === 'CORRECT' && <path d="m3.5 8.5 3 3 6-7" strokeLinecap="round" strokeLinejoin="round" />}
+        {outcome === 'INCORRECT' && <path d="M5 5l6 6M11 5l-6 6" strokeLinecap="round" />}
+        {outcome === 'TIMEOUT' && <path d="M8 4.5V8l2.5 1.5" strokeLinecap="round" strokeLinejoin="round" />}
+      </svg>
     </span>
   )
 }

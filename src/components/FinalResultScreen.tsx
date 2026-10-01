@@ -1,7 +1,7 @@
-import { DAYS, formatDay } from '../data/scenarios'
+import { DAYS, QUESTIONS_PER_TEAM, formatDay } from '../data/scenarios'
 import { useCountUp } from '../hooks/useCountUp'
 import type { AnswerRecord, Scores, Team } from '../types/game'
-import { Arrow, Button, SuitabilityMeter, TEAM_STYLE, TeamMark } from './ui'
+import { Arrow, Button, ResultMark, TEAM_STYLE, TeamMark } from './ui'
 
 type Props = {
   scores: Scores
@@ -9,7 +9,18 @@ type Props = {
   onNext: () => void
 }
 
-function FinalScore({ team, score, winner }: { team: Team; score: number; winner: boolean }) {
+function FinalScore({
+  team,
+  score,
+  records,
+  winner,
+}: {
+  team: Team
+  score: number
+  records: AnswerRecord[]
+  winner: boolean
+}) {
+  const count = (o: AnswerRecord['outcome']) => records.filter((r) => r.outcome === o).length
   const shown = useCountUp(score, { from: 0, duration: 1200 })
   const style = TEAM_STYLE[team]
   return (
@@ -24,9 +35,7 @@ function FinalScore({ team, score, winner }: { team: Team; score: number; winner
           <span className="eyebrow text-fog">Team {team}</span>
         </div>
         {winner && (
-          <span className={`eyebrow rounded-md ${style.bg} px-2.5 py-1 !text-[0.6875rem] text-ink`}>
-            Điểm cao nhất
-          </span>
+          <span className={`eyebrow rounded-md ${style.bg} px-2.5 py-1 !text-[0.6875rem] text-ink`}>Điểm cao nhất</span>
         )}
       </div>
       <div className="mt-6 flex items-baseline gap-3">
@@ -39,6 +48,9 @@ function FinalScore({ team, score, winner }: { team: Team; score: number; winner
         </span>
         <span className="eyebrow text-mist">Points</span>
       </div>
+      <div className="mt-3 text-sm text-mist">
+        {count('CORRECT')}/{QUESTIONS_PER_TEAM} câu chính xác · {count('INCORRECT')} chưa chính xác · {count('TIMEOUT')} hết giờ
+      </div>
     </div>
   )
 }
@@ -46,7 +58,7 @@ function FinalScore({ team, score, winner }: { team: Team; score: number; winner
 export function FinalResultScreen({ scores, history, onNext }: Props) {
   const tie = scores.A === scores.B
   const winner: Team | null = tie ? null : scores.A > scores.B ? 'A' : 'B'
-  const rec = (day: number, team: Team) => history.find((h) => h.day === day && h.team === team)
+  const recordsOf = (team: Team) => history.filter((h) => h.team === team)
 
   return (
     <div className="space-y-10">
@@ -62,33 +74,36 @@ export function FinalResultScreen({ scores, history, onNext }: Props) {
       </div>
 
       <div className="grid animate-fade-up gap-5 [animation-delay:180ms] md:grid-cols-2">
-        <FinalScore team="A" score={scores.A} winner={winner === 'A'} />
-        <FinalScore team="B" score={scores.B} winner={winner === 'B'} />
+        <FinalScore team="A" score={scores.A} records={recordsOf('A')} winner={winner === 'A'} />
+        <FinalScore team="B" score={scores.B} records={recordsOf('B')} winner={winner === 'B'} />
       </div>
 
       <section className="animate-fade-up rounded-3xl bg-paper p-6 text-navy [animation-delay:260ms] sm:p-8">
         <h2 className="eyebrow text-stone">Hành trình đã đi qua</h2>
         <ol className="mt-4 divide-y divide-paper-2">
           {DAYS.map((d) => (
-            <li key={d.day} className="grid grid-cols-[4.5rem_1fr] items-center gap-x-4 gap-y-2 py-3 sm:grid-cols-[5rem_1fr_auto_auto] sm:gap-x-8">
+            <li
+              key={d.day}
+              className="grid grid-cols-[4.5rem_1fr] items-center gap-x-4 gap-y-2 py-3 sm:grid-cols-[5rem_1fr_auto_auto] sm:gap-x-8"
+            >
               <span className="tabular text-sm font-bold tracking-[0.12em] text-teal-deep">DAY {formatDay(d.day)}</span>
               <span className="text-lg font-semibold">
                 {d.journey}
                 {d.multiplier > 1 && <span className="ml-2 text-xs font-bold text-amber-deep">×{d.multiplier}</span>}
               </span>
               {(['A', 'B'] as const).map((t) => {
-                const r = rec(d.day, t)
+                const recs = history.filter((h) => h.day === d.day && h.team === t)
                 return (
                   <span key={t} className="col-start-2 flex items-center gap-2 text-sm sm:col-start-auto">
                     <span className={`w-4 font-bold ${TEAM_STYLE[t].onPaper}`}>{t}</span>
-                    {r ? (
-                      <>
-                        <SuitabilityMeter suitability={r.suitability} tone="paper" size="sm" />
-                        <span className="tabular w-10 text-right font-semibold">+{r.points}</span>
-                      </>
-                    ) : (
-                      <span className="text-stone">—</span>
-                    )}
+                    <span className="flex gap-1">
+                      {recs.map((r) => (
+                        <ResultMark key={r.questionId} outcome={r.outcome} size="sm" tone="paper" />
+                      ))}
+                    </span>
+                    <span className="tabular w-11 text-right font-semibold">
+                      +{recs.reduce((s, r) => s + r.points, 0)}
+                    </span>
                   </span>
                 )
               })}

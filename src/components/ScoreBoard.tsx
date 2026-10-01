@@ -27,9 +27,9 @@ function TeamScore({ team, score, active, gain }: { team: Team; score: number; a
           {shown}
         </div>
       </div>
-      {gain && gain.team === team && (
+      {gain && gain.team === team && gain.points > 0 && (
         <span
-          key={gain.scenarioId}
+          key={gain.questionId}
           className={`absolute -bottom-3 right-2 animate-gain rounded-md ${style.bg} px-1.5 py-0.5 text-xs font-bold text-ink`}
         >
           +{gain.points}

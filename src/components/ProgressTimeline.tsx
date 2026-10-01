@@ -1,17 +1,17 @@
-import { DAYS, formatDay } from '../data/scenarios'
-import type { AnswerRecord, Team } from '../types/game'
+import { DAYS, QUESTIONS_PER_DAY, QUESTION_SEQUENCE, formatDay } from '../data/scenarios'
+import type { AnswerRecord } from '../types/game'
 import { TEAM_STYLE } from './ui'
 
 type Props = {
   currentDayIndex: number
   history: AnswerRecord[]
   finished?: boolean
-  /** Both teams have answered the current day (DAY_COMPLETE screen). */
+  /** All four questions of the current day are answered (DAY_COMPLETE screen). */
   currentDone?: boolean
 }
 
 export function ProgressTimeline({ currentDayIndex, history, finished = false, currentDone = false }: Props) {
-  const answered = (day: number, team: Team) => history.some((h) => h.day === day && h.team === team)
+  const answered = (questionId: string) => history.some((h) => h.questionId === questionId)
 
   return (
     <nav aria-label="Tiến trình 30 ngày" className="mx-auto w-full max-w-[88rem] px-4 sm:px-8">
@@ -20,6 +20,7 @@ export function ProgressTimeline({ currentDayIndex, history, finished = false, c
           const done = finished || i < currentDayIndex || (currentDone && i === currentDayIndex)
           const current = !finished && !currentDone && i === currentDayIndex
           const last = i === DAYS.length - 1
+          const turns = QUESTION_SEQUENCE.slice(i * QUESTIONS_PER_DAY, (i + 1) * QUESTIONS_PER_DAY)
           return (
             <li key={d.day} className={`flex items-start ${last ? '' : 'flex-1'}`}>
               <div className="flex w-14 flex-col items-center sm:w-20" aria-current={current ? 'step' : undefined}>
@@ -43,11 +44,11 @@ export function ProgressTimeline({ currentDayIndex, history, finished = false, c
                   </span>
                 )}
                 {current && (
-                  <span className="mt-1.5 flex gap-1" aria-label="Tiến độ hai đội trong ngày">
-                    {(['A', 'B'] as const).map((t) => (
+                  <span className="mt-1.5 flex gap-1" aria-label="Lượt trong ngày: A, B, A, B">
+                    {turns.map((t) => (
                       <span
-                        key={t}
-                        className={`h-1 w-3 rounded-full ${answered(d.day, t) ? TEAM_STYLE[t].bg : 'bg-line'}`}
+                        key={t.id}
+                        className={`h-1 w-2.5 rounded-full ${answered(t.id) ? TEAM_STYLE[t.team].bg : 'bg-line'}`}
                       />
                     ))}
                   </span>

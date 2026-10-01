@@ -28,11 +28,24 @@
   --color-teal-deep: #0c6f64;
   --color-amber: #e3a857;
   --color-amber-deep: #8f5610;
+  --color-red: #f0705f;
 
   --animate-fade-up: fade-up 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-fade-in: fade-in 0.4s ease-out both;
   --animate-gain: gain 2.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-stamp: stamp 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  /* Infinite: only ever applied through `motion-safe:` so reduced motion never flickers. */
+  --animate-urgent: urgent 1s ease-in-out infinite;
+
+  @keyframes urgent {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
 
   @keyframes fade-up {
     from {

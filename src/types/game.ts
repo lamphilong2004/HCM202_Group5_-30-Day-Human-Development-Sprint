@@ -1,28 +1,27 @@
 export type Team = 'A' | 'B'
 
-export type Suitability = 'BEST' | 'GOOD' | 'CONSIDER'
+export type OptionId = 'A' | 'B' | 'C' | 'D'
+
+export type QuestionKind = 'THEORY' | 'APPLICATION'
 
 export type Option = {
-  id: string
+  id: OptionId
   text: string
-  /** Base points before the day multiplier. */
-  score: number
-  suitability: Suitability
-  /** One-line comment shown when this option is chosen. */
-  note: string
 }
 
-export type Scenario = {
+export type Question = {
+  /** e.g. "A01" = Team A, question 01. */
   id: string
-  day: number
   team: Team
-  theme: string
-  label?: string
+  /** 1–10, the question's number within its team. */
+  number: number
+  day: number
+  kind: QuestionKind
   question: string
-  options: Option[]
+  options: [Option, Option, Option, Option]
+  correct: OptionId
   explanation: string
   theory: string[]
-  multiplier?: number
 }
 
 export type DayInfo = {
@@ -33,30 +32,31 @@ export type DayInfo = {
   multiplier: number
 }
 
-export type Screen =
-  | 'START'
-  | 'QUESTION'
-  | 'FEEDBACK'
-  | 'DAY_COMPLETE'
-  | 'FINAL_RESULT'
-  | 'REFLECTION'
+export type Screen = 'START' | 'QUESTION' | 'FEEDBACK' | 'DAY_COMPLETE' | 'FINAL_RESULT' | 'REFLECTION'
 
 export type Scores = Record<Team, number>
 
+export type Outcome = 'CORRECT' | 'INCORRECT' | 'TIMEOUT'
+
 export type AnswerRecord = {
-  scenarioId: string
+  questionId: string
   day: number
   team: Team
-  optionId: string
-  suitability: Suitability
+  /** null when the team ran out of time without answering. */
+  optionId: OptionId | null
+  outcome: Outcome
+  /** True only for CORRECT; TIMEOUT counts as not correct in all statistics. */
+  correct: boolean
   points: number
 }
 
 export type GameState = {
   screen: Screen
-  currentDayIndex: number
-  currentTeam: Team
-  selectedAnswer: string | null
+  /** Index into QUESTION_SEQUENCE (0–19). Day and team are derived from it. */
+  step: number
+  /** Epoch ms when the current question's 30 s window closes; null outside QUESTION. */
+  questionDeadline: number | null
+  selectedAnswer: OptionId | null
   showFeedback: boolean
   scores: Scores
   history: AnswerRecord[]

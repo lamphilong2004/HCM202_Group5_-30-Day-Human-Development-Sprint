@@ -1,6 +1,6 @@
-import { BASE_POINTS, DAYS, SUITABILITY_META, formatDay } from '../data/scenarios'
-import type { Suitability } from '../types/game'
-import { Arrow, Button, SuitabilityMeter } from './ui'
+import { CORRECT_POINTS, DAYS, QUESTIONS_PER_TEAM, formatDay } from '../data/scenarios'
+import { QUESTION_SECONDS } from '../game/timing'
+import { Arrow, Button, RESULT_LABEL, ResultMark } from './ui'
 
 export function StartScreen({ onStart }: { onStart: () => void }) {
   return (
@@ -12,12 +12,16 @@ export function StartScreen({ onStart }: { onStart: () => void }) {
           Sprint Battle
         </h1>
         <p className="mt-6 max-w-2xl animate-fade-up text-xl leading-relaxed text-fog [animation-delay:120ms] sm:text-2xl">
-          Mô phỏng 30 ngày tự rèn luyện — 10 tình huống, 2 đội, một hành trình.
+          Mô phỏng 30 ngày tự rèn luyện — 20 câu hỏi, 2 đội, một hành trình.
         </p>
         <div className="mt-8 max-w-2xl animate-fade-up space-y-3 text-lg leading-relaxed text-mist [animation-delay:180ms]">
-          <p>Hai đội sẽ lần lượt trải qua 5 mốc của hành trình 30 ngày.</p>
-          <p>Mỗi đội nhận một tình huống khác nhau nhưng cùng chủ đề.</p>
-          <p>Sau mỗi lựa chọn, trò chơi sẽ phân tích quyết định và liên hệ với nội dung xây dựng con người.</p>
+          <p>Hai đội lần lượt trải qua 5 mốc của hành trình 30 ngày; mỗi mốc có 4 câu, luân phiên A → B → A → B.</p>
+          <p>Mỗi đội nhận 10 câu khác nhau: 5 câu lý thuyết và 5 câu vận dụng.</p>
+          <p>
+            Mỗi câu có {QUESTION_SECONDS} giây. Bấm một phương án là chốt đáp án; hết giờ mà chưa trả lời thì được 0
+            điểm.
+          </p>
+          <p>Sau mỗi câu, trò chơi giải thích đáp án và liên hệ với nội dung xây dựng con người.</p>
         </div>
         <div className="mt-10 animate-fade-up [animation-delay:240ms]">
           <Button onClick={onStart} className="px-10 py-5 text-lg">
@@ -49,22 +53,28 @@ export function StartScreen({ onStart }: { onStart: () => void }) {
         <div className="rounded-2xl border border-line p-6 sm:p-8">
           <div className="eyebrow text-mist">Cách tính điểm</div>
           <ul className="mt-4 space-y-3">
-            {(Object.keys(BASE_POINTS) as Suitability[]).map((s) => (
-              <li key={s} className="flex items-center gap-4">
-                <SuitabilityMeter suitability={s} size="sm" />
-                <span className="flex-1 text-base text-fog">{SUITABILITY_META[s].label}</span>
-                <span className="tabular font-semibold text-paper">+{BASE_POINTS[s]}</span>
+            {(['CORRECT', 'INCORRECT', 'TIMEOUT'] as const).map((outcome) => (
+              <li key={outcome} className="flex items-center gap-4">
+                <ResultMark outcome={outcome} size="sm" />
+                <span className="flex-1 text-base text-fog">
+                  {RESULT_LABEL[outcome]}
+                  {outcome === 'TIMEOUT' && ` (quá ${QUESTION_SECONDS} giây)`}
+                </span>
+                <span className="tabular font-semibold text-paper">+{outcome === 'CORRECT' ? CORRECT_POINTS : 0}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-sm text-mist">Day 30 là thử thách cuối: điểm nhân đôi.</p>
+          <p className="mt-4 text-sm text-mist">
+            Day 30 là thử thách cuối: điểm nhân đôi (+{CORRECT_POINTS * 2}). Tối đa mỗi đội:{' '}
+            {CORRECT_POINTS * (QUESTIONS_PER_TEAM + 2)} điểm.
+          </p>
         </div>
       </aside>
 
       <p className="animate-fade-in border-t border-line pt-6 text-sm leading-relaxed text-mist [animation-delay:400ms] lg:col-span-12">
-        “30 ngày” là khung mô phỏng do Nhóm 05 thiết kế, không phải khoảng thời gian được Hồ Chí Minh quy định. Các
-        tình huống là ví dụ vận dụng do nhóm xây dựng; điểm số chỉ là cơ chế trò chơi, không đánh giá phẩm chất của
-        người chơi.
+        “30 ngày” là khung mô phỏng do Nhóm 05 thiết kế, không phải khoảng thời gian hay phương pháp được Hồ Chí Minh
+        quy định. Tham chiếu lý luận: Giáo trình HCM202 (2019), Chương VI, mục III. Điểm số chỉ là cơ chế trò chơi,
+        không đánh giá phẩm chất của người chơi.
       </p>
     </div>
   )

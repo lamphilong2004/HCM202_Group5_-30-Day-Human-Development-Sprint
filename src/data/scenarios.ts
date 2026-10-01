@@ -1,385 +1,413 @@
-import type { DayInfo, Option, Scenario, Suitability, Team } from '../types/game'
+import type { DayInfo, Option, OptionId, Question, QuestionKind, Team } from '../types/game'
 
 /*
- * Toàn bộ tình huống dưới đây là nội dung game do Nhóm 05 thiết kế để vận dụng
- * lý luận về xây dựng con người. Không phải trích dẫn lời Hồ Chí Minh và không
- * phải ví dụ lấy từ giáo trình. “30 ngày” chỉ là khung mô phỏng của nhóm.
+ * Ngân hàng 20 câu hỏi đã được Nhóm 05 duyệt (câu hỏi, phương án, đáp án giữ
+ * nguyên văn). Phần “Vì sao?” do nhóm soạn và đã được nhóm đối chiếu với
+ * Giáo trình Tư tưởng Hồ Chí Minh (Bộ GD&ĐT, 2019), Chương VI, mục III,
+ * tr. 131–133. Cách chia hai mặt “hồng” (phẩm chất) / “chuyên” (năng lực) là
+ * khái quát diễn giải của nhóm, không phải bảng phân loại nguyên văn.
  *
- * - Team A: 5 tình huống gốc trong gameproto.txt (đã được duyệt).
- * - Team B: 5 tình huống bổ sung, cùng chủ đề với từng Day.
+ * “30 ngày” là khung mô phỏng do nhóm thiết kế, không phải phương pháp do
+ * Hồ Chí Minh quy định.
  */
 
-export const BASE_POINTS: Record<Suitability, number> = {
-  BEST: 100,
-  GOOD: 50,
-  CONSIDER: 20,
-}
-
-export const SUITABILITY_META: Record<Suitability, { label: string; level: 1 | 2 | 3 }> = {
-  BEST: { label: 'Phù hợp nhất', level: 3 },
-  GOOD: { label: 'Khá phù hợp', level: 2 },
-  CONSIDER: { label: 'Cần cân nhắc thêm', level: 1 },
-}
+export const CORRECT_POINTS = 100
+export const QUESTIONS_PER_TEAM = 10
 
 export const DAYS: DayInfo[] = [
-  { day: 1, theme: 'Kỷ luật', journey: 'Kỷ luật', multiplier: 1 },
+  { day: 1, theme: 'Kỷ luật & khởi đầu xây dựng con người', journey: 'Khởi đầu xây dựng con người', multiplier: 1 },
   { day: 7, theme: 'Phát triển năng lực · “Chuyên”', journey: 'Phát triển năng lực', multiplier: 1 },
-  { day: 15, theme: 'Trách nhiệm · “Hồng”', journey: 'Trách nhiệm', multiplier: 1 },
-  { day: 22, theme: 'Cá nhân & tập thể', journey: 'Tinh thần tập thể', multiplier: 1 },
-  { day: 30, theme: 'Tự nhìn lại', journey: 'Tự nhìn lại', multiplier: 2 },
+  { day: 15, theme: 'Phẩm chất, trách nhiệm · “Hồng”', journey: 'Phẩm chất & trách nhiệm', multiplier: 1 },
+  { day: 22, theme: 'Cá nhân, tập thể & môi trường', journey: 'Cá nhân, tập thể & môi trường', multiplier: 1 },
+  { day: 30, theme: 'Tự rèn luyện & nhìn lại', journey: 'Tự rèn luyện & nhìn lại', multiplier: 2 },
 ]
 
-const opt = (id: string, text: string, suitability: Suitability, note: string): Option => ({
-  id,
-  text,
-  suitability,
-  score: BASE_POINTS[suitability],
-  note,
-})
-
-export const SCENARIOS: Scenario[] = [
-  // ─── DAY 01 · KỶ LUẬT ───────────────────────────────────────────────
-  {
-    id: 'A1',
-    day: 1,
-    team: 'A',
-    theme: DAYS[0].theme,
-    label: 'Kế hoạch tối nay',
-    question:
-      'Bạn đã lên kế hoạch học tập tối nay. Nhưng một người bạn rủ bạn đi chơi ngay trước giờ học. Bạn sẽ làm gì?',
-    options: [
-      opt(
-        'A',
-        'Đi chơi tối nay và định học bù vào ngày mai.',
-        'GOOD',
-        'Vẫn còn ý định học, nhưng kế hoạch bị đẩy lùi bởi một tác động ngắn hạn; lặp lại nhiều lần sẽ khó thành thói quen.',
-      ),
-      opt(
-        'B',
-        'Giữ kế hoạch học tập và sắp xếp thời gian đi chơi vào thời điểm phù hợp.',
-        'BEST',
-        'Giữ được mục tiêu đã đặt ra mà vẫn tôn trọng quan hệ bạn bè — kỷ luật không có nghĩa là cứng nhắc.',
-      ),
-      opt(
-        'C',
-        'Không làm gì cả và để ngày mai quyết định.',
-        'CONSIDER',
-        'Trì hoãn quyết định khiến cả thời gian học lẫn thời gian nghỉ đều không được dùng có chủ đích.',
-      ),
-    ],
-    explanation:
-      'Tự rèn luyện bắt đầu từ khả năng duy trì mục tiêu và điều chỉnh hành vi trước những tác động ngắn hạn. Kỷ luật không phải là từ chối mọi niềm vui, mà là chủ động sắp xếp để mục tiêu dài hạn không bị gián đoạn.',
-    theory: ['Tự rèn luyện', 'Tu dưỡng', 'Kỷ luật'],
-  },
-  {
-    id: 'B1',
-    day: 1,
-    team: 'B',
-    theme: DAYS[0].theme,
-    label: 'Cam kết 45 phút',
-    question:
-      'Bạn tự cam kết mỗi tối học tiếng Anh 45 phút trong suốt tháng này. Đến tối thứ tư, sau ca làm thêm, bạn rất mệt và chỉ muốn nghỉ. Bạn sẽ làm gì?',
-    options: [
-      opt(
-        'A',
-        'Vẫn học, nhưng rút xuống 15 phút để giữ nhịp; sau đó xem lại lịch để cam kết phù hợp hơn với sức mình.',
-        'BEST',
-        'Giữ được nhịp đều đặn trong ngày khó khăn, đồng thời điều chỉnh kế hoạch cho sát thực tế.',
-      ),
-      opt(
-        'B',
-        'Nghỉ tối nay và học bù gấp đôi vào cuối tuần.',
-        'GOOD',
-        'Vẫn giữ mục tiêu tổng, nhưng dồn việc dễ làm đứt nhịp và tạo áp lực cho những ngày sau.',
-      ),
-      opt(
-        'C',
-        'Tạm dừng kế hoạch đến khi lịch làm thêm bớt bận rồi bắt đầu lại.',
-        'CONSIDER',
-        'Điều kiện lý tưởng hiếm khi đến; tạm dừng không thời hạn dễ trở thành bỏ hẳn.',
-      ),
-    ],
-    explanation:
-      'Kỷ luật được thử thách rõ nhất vào những ngày không thuận lợi. Duy trì một mức tối thiểu và điều chỉnh kế hoạch hợp lý giúp việc tự rèn luyện trở thành thói quen bền bỉ, thay vì phụ thuộc vào hứng thú nhất thời.',
-    theory: ['Tự rèn luyện', 'Kỷ luật', 'Phương pháp làm việc'],
-  },
-
-  // ─── DAY 07 · PHÁT TRIỂN NĂNG LỰC / “CHUYÊN” ────────────────────────
-  {
-    id: 'A2',
-    day: 7,
-    team: 'A',
-    theme: DAYS[1].theme,
-    label: 'Kỹ năng còn thiếu',
-    question:
-      'Bạn nhận ra mình đang yếu một kỹ năng quan trọng đối với việc học và công việc tương lai. Bạn sẽ làm gì?',
-    options: [
-      opt(
-        'A',
-        'Bỏ qua vì đó không phải điểm mạnh của mình.',
-        'CONSIDER',
-        'Né tránh điểm yếu khiến năng lực không được mở rộng, dù đó là kỹ năng cần cho tương lai.',
-      ),
-      opt(
-        'B',
-        'Chờ người khác chỉ cho mình cách làm.',
-        'GOOD',
-        'Học hỏi từ người khác là cần thiết, nhưng nếu chỉ chờ đợi thì quá trình phát triển vẫn bị động.',
-      ),
-      opt(
-        'C',
-        'Xác định điểm yếu và lập kế hoạch cải thiện từng bước.',
-        'BEST',
-        'Chủ động nhận diện và có lộ trình cụ thể — năng lực được xây dựng qua từng bước nhỏ.',
-      ),
-    ],
-    explanation:
-      '“Chuyên” không chỉ là có kiến thức mà còn là quá trình chủ động phát triển năng lực của bản thân. Nhận diện đúng điểm yếu và kiên trì cải thiện là biểu hiện của tinh thần tự học, tự rèn luyện.',
-    theory: ['“Chuyên”', 'Năng lực', 'Tự rèn luyện'],
-  },
-  {
-    id: 'B2',
-    day: 7,
-    team: 'B',
-    theme: DAYS[1].theme,
-    label: 'Phần việc chưa quen',
-    question:
-      'Nhóm bạn phải làm một dashboard phân tích dữ liệu cho môn học. Bạn chưa biết dùng công cụ này, còn một thành viên đã rất thạo và đề nghị làm hộ toàn bộ phần đó. Bạn sẽ làm gì?',
-    options: [
-      opt(
-        'A',
-        'Để bạn ấy làm cho nhanh, mình nhận phần thuyết trình thay thế.',
-        'GOOD',
-        'Phân công hợp lý giúp nhóm kịp tiến độ, nhưng bạn bỏ lỡ cơ hội bù đắp đúng kỹ năng mình đang thiếu.',
-      ),
-      opt(
-        'B',
-        'Nhận một phần vừa sức, nhờ bạn ấy hướng dẫn và tự học thêm để làm được.',
-        'BEST',
-        'Vừa đảm bảo tiến độ chung, vừa biến bài tập thành cơ hội nâng năng lực thật sự.',
-      ),
-      opt(
-        'C',
-        'Tự làm toàn bộ một mình để chứng minh năng lực, không cần hỏi ai.',
-        'CONSIDER',
-        'Tinh thần tự lập đáng quý, nhưng tự làm khi chưa có kỹ năng dễ ảnh hưởng chất lượng và tiến độ của cả nhóm.',
-      ),
-    ],
-    explanation:
-      'Phát triển năng lực chuyên môn cần sự chủ động của bản thân, nhưng không tách rời môi trường tập thể. Học từ người giỏi hơn trong khi vẫn góp phần vào việc chung là cách để “chuyên” tiến bộ một cách thực chất.',
-    theory: ['“Chuyên”', 'Năng lực', 'Tinh thần tập thể'],
-  },
-
-  // ─── DAY 15 · TRÁCH NHIỆM / “HỒNG” ──────────────────────────────────
-  {
-    id: 'A3',
-    day: 15,
-    team: 'A',
-    theme: DAYS[2].theme,
-    label: 'Lỗi trong bài nhóm',
-    question:
-      'Bạn phát hiện mình đã làm sai một phần bài nhóm và khiến các thành viên khác phải sửa lại. Bạn sẽ làm gì?',
-    options: [
-      opt(
-        'A',
-        'Lặng lẽ tự sửa phần của mình, không nói lại với nhóm.',
-        'GOOD',
-        'Có sửa lỗi, nhưng thiếu sự thẳng thắn; nhóm không biết nguyên nhân để cùng rút kinh nghiệm.',
-      ),
-      opt(
-        'B',
-        'Đổ lỗi cho hoàn cảnh hoặc thành viên khác.',
-        'CONSIDER',
-        'Chuyển trách nhiệm sang người khác làm giảm lòng tin và khiến lỗi dễ lặp lại.',
-      ),
-      opt(
-        'C',
-        'Thừa nhận trách nhiệm và cùng nhóm sửa lỗi.',
-        'BEST',
-        'Thẳng thắn nhận lỗi và hành động để khắc phục — trách nhiệm được thể hiện bằng việc làm.',
-      ),
-    ],
-    explanation:
-      'Phẩm chất không chỉ thể hiện ở nhận thức mà còn thể hiện qua cách một người chịu trách nhiệm với hành động của mình. Dám nhận khuyết điểm và sửa chữa là một phần của quá trình tu dưỡng.',
-    theory: ['“Hồng”', 'Trách nhiệm', 'Tu dưỡng'],
-  },
-  {
-    id: 'B3',
-    day: 15,
-    team: 'B',
-    theme: DAYS[2].theme,
-    label: 'Đoạn văn không trích nguồn',
-    question:
-      'Bạn là nhóm trưởng. Một ngày trước hạn nộp, bạn phát hiện một thành viên đã chép gần như nguyên văn một đoạn từ Internet mà không trích dẫn nguồn. Bạn sẽ làm gì?',
-    options: [
-      opt(
-        'A',
-        'Trao đổi riêng với bạn ấy, cùng viết lại hoặc trích dẫn đúng nguồn trước khi nộp.',
-        'BEST',
-        'Giữ được sự trung thực của cả nhóm, đồng thời giúp thành viên hiểu vấn đề và tự sửa.',
-      ),
-      opt(
-        'B',
-        'Tự viết lại đoạn đó trong đêm, không nói gì để tránh căng thẳng.',
-        'GOOD',
-        'Bài nộp được đảm bảo, nhưng thành viên không nhận ra vấn đề và có thể lặp lại.',
-      ),
-      opt(
-        'C',
-        'Nộp nguyên như vậy vì thời gian gấp và đó không phải phần mình viết.',
-        'CONSIDER',
-        'Là nhóm trưởng, bạn cùng chịu trách nhiệm với sản phẩm chung; bỏ qua vi phạm ảnh hưởng đến cả nhóm.',
-      ),
-    ],
-    explanation:
-      '“Hồng” gắn với phẩm chất, đạo đức — trong học tập, đó là sự trung thực và trách nhiệm với sản phẩm chung. Người nhóm trưởng góp ý thẳng thắn, đúng cách vừa giữ nguyên tắc, vừa nêu gương và giúp người khác cùng tiến bộ.',
-    theory: ['“Hồng”', 'Trung thực', 'Nêu gương'],
-  },
-
-  // ─── DAY 22 · CÁ NHÂN & TẬP THỂ ─────────────────────────────────────
-  {
-    id: 'A4',
-    day: 22,
-    team: 'A',
-    theme: DAYS[3].theme,
-    label: 'Khoảng thời gian rảnh',
-    question: 'Bạn có một khoảng thời gian rảnh trong ngày. Bạn sẽ sử dụng nó như thế nào?',
-    options: [
-      opt(
-        'A',
-        'Chỉ sử dụng thời gian đó cho lợi ích cá nhân.',
-        'GOOD',
-        'Chăm lo cho bản thân là chính đáng, nhưng bạn bỏ qua cơ hội gắn sự phát triển của mình với người xung quanh.',
-      ),
-      opt(
-        'B',
-        'Giúp đỡ một người đang cần hỗ trợ nhưng vẫn đảm bảo hoàn thành trách nhiệm của mình.',
-        'BEST',
-        'Cân bằng được trách nhiệm cá nhân và sự quan tâm tới người khác.',
-      ),
-      opt(
-        'C',
-        'Để thời gian trôi qua vì không biết làm gì.',
-        'CONSIDER',
-        'Thời gian không được sử dụng có mục đích — cho cả bản thân lẫn người khác.',
-      ),
-    ],
-    explanation:
-      'Xây dựng con người không chỉ hướng đến sự phát triển cá nhân mà còn gắn với trách nhiệm đối với người khác và cộng đồng.',
-    theory: ['Ý thức làm chủ', 'Tinh thần tập thể', 'Trách nhiệm'],
-  },
-  {
-    id: 'B4',
-    day: 22,
-    team: 'B',
-    theme: DAYS[3].theme,
-    label: 'Tuần thi và buổi tình nguyện',
-    question:
-      'Tuần này bạn có bài kiểm tra quan trọng. Câu lạc bộ tình nguyện bạn tham gia đang thiếu người cho buổi dạy học miễn phí cho trẻ em vào cuối tuần. Bạn sẽ làm gì?',
-    options: [
-      opt(
-        'A',
-        'Nhận lời tham gia cả ngày, việc ôn bài tính sau.',
-        'CONSIDER',
-        'Tinh thần vì tập thể rất đáng quý, nhưng bỏ ngỏ trách nhiệm học tập khiến sự đóng góp khó bền vững.',
-      ),
-      opt(
-        'B',
-        'Từ chối lần này vì đang bận thi, hẹn tham gia các đợt sau.',
-        'GOOD',
-        'Ưu tiên hợp lý và trung thực với khả năng của mình, nhưng chưa tìm cách đóng góp trong phạm vi có thể.',
-      ),
-      opt(
-        'C',
-        'Lên lịch ôn tập trước, đăng ký hỗ trợ một ca phù hợp và báo rõ khả năng của mình cho ban tổ chức.',
-        'BEST',
-        'Vừa giữ trách nhiệm với việc học, vừa đóng góp cho tập thể một cách có kế hoạch.',
-      ),
-    ],
-    explanation:
-      'Cá nhân và tập thể không đối lập. Con người toàn diện biết hoàn thành trách nhiệm của bản thân, đồng thời chủ động đóng góp cho cộng đồng bằng khả năng thực tế của mình — có kế hoạch, không cực đoan về phía nào.',
-    theory: ['Con người toàn diện', 'Tinh thần tập thể', 'Trách nhiệm'],
-  },
-
-  // ─── DAY 30 · TỰ NHÌN LẠI (FINAL DAY ×2) ────────────────────────────
-  {
-    id: 'A5',
-    day: 30,
-    team: 'A',
-    theme: DAYS[4].theme,
-    label: 'Mục tiêu chưa đạt',
-    question: 'Bạn đặt một mục tiêu quan trọng nhưng cuối cùng không đạt được. Bạn sẽ làm gì?',
-    options: [
-      opt(
-        'A',
-        'Bỏ cuộc vì mình đã thất bại.',
-        'CONSIDER',
-        'Coi một lần chưa đạt là điểm kết thúc khiến quá trình rèn luyện dừng lại.',
-      ),
-      opt(
-        'B',
-        'Cho rằng nguyên nhân chủ yếu do hoàn cảnh, chờ điều kiện thuận lợi hơn rồi thử lại.',
-        'GOOD',
-        'Vẫn muốn tiếp tục, nhưng khi chỉ nhìn ra nguyên nhân bên ngoài thì cách làm của bản thân khó được cải thiện.',
-      ),
-      opt(
-        'C',
-        'Nhìn lại nguyên nhân, điều chỉnh cách làm và tiếp tục rèn luyện.',
-        'BEST',
-        'Biến lần chưa thành công thành bài học để điều chỉnh — cốt lõi của tự rèn luyện.',
-      ),
-    ],
-    explanation:
-      'Tự rèn luyện không phải là không bao giờ thất bại, mà là biết nhìn lại, điều chỉnh và tiếp tục hoàn thiện bản thân.',
-    theory: ['Tự rèn luyện', 'Tu dưỡng', 'Kiên trì'],
-    multiplier: 2,
-  },
-  {
-    id: 'B5',
-    day: 30,
-    team: 'B',
-    theme: DAYS[4].theme,
-    label: 'Góp ý sau 30 ngày',
-    question:
-      'Kết thúc 30 ngày, nhóm góp ý rằng bạn thường nhận việc rồi nộp trễ hạn, dù chất lượng khá tốt. Bạn sẽ phản hồi thế nào?',
-    options: [
-      opt(
-        'A',
-        'Cảm ơn góp ý, cùng nhóm xem lại những lần trễ hạn và đặt cách theo dõi tiến độ cụ thể cho dự án tiếp theo.',
-        'BEST',
-        'Tiếp nhận cởi mở và chuyển góp ý thành một thay đổi cụ thể, có thể kiểm chứng.',
-      ),
-      opt(
-        'B',
-        'Giải thích rằng chất lượng quan trọng hơn thời hạn, nên trễ một chút là chấp nhận được.',
-        'CONSIDER',
-        'Chất lượng là điểm mạnh, nhưng bảo vệ thói quen trễ hạn bỏ qua ảnh hưởng tới các thành viên khác.',
-      ),
-      opt(
-        'C',
-        'Ghi nhận góp ý và tự nhắc mình lần sau cố gắng đúng hạn hơn.',
-        'GOOD',
-        'Thái độ tiếp nhận là tốt, nhưng thiếu phương pháp cụ thể nên thay đổi dễ chỉ dừng ở ý định.',
-      ),
-    ],
-    explanation:
-      'Tự nhìn lại hiệu quả cần cả thái độ cầu thị lẫn phương pháp làm việc cụ thể. Biết lắng nghe góp ý và biến nó thành hành động là cách để phẩm chất và năng lực — “hồng” và “chuyên” — cùng được hoàn thiện.',
-    theory: ['Tự rèn luyện', 'Phương pháp làm việc', '“Vừa hồng, vừa chuyên”'],
-    multiplier: 2,
-  },
-]
-
-export const TOTAL_DAYS = DAYS.length
-
-export function getScenario(dayIndex: number, team: Team): Scenario {
-  const { day } = DAYS[dayIndex]
-  const scenario = SCENARIOS.find((s) => s.day === day && s.team === team)
-  if (!scenario) throw new Error(`Missing scenario for day ${day}, team ${team}`)
-  return scenario
+export const KIND_LABEL: Record<QuestionKind, string> = {
+  THEORY: 'Lý thuyết',
+  APPLICATION: 'Vận dụng',
 }
 
-export function pointsFor(option: Option, scenario: Scenario): number {
-  return option.score * (scenario.multiplier ?? 1)
+type Draft = Omit<Question, 'id' | 'options'> & { options: [string, string, string, string] }
+
+const q = (d: Draft): Question => ({
+  ...d,
+  id: `${d.team}${String(d.number).padStart(2, '0')}`,
+  options: d.options.map((text, i) => ({ id: 'ABCD'[i] as OptionId, text })) as Question['options'],
+})
+
+export const QUESTIONS: Question[] = [
+  // ─── DAY 01 · KHỞI ĐẦU ──────────────────────────────────────────────
+  q({
+    team: 'A',
+    number: 1,
+    day: 1,
+    kind: 'THEORY',
+    question: 'Tầm quan trọng của việc xây dựng con người được Hồ Chí Minh xác định như thế nào?',
+    options: [
+      'Là nhiệm vụ tạm thời trong thời kỳ chiến tranh',
+      'Là yêu cầu khách quan của sự nghiệp cách mạng, vừa cấp bách, vừa lâu dài, có ý nghĩa chiến lược',
+      'Là công việc phụ thuộc hoàn toàn vào sự phát triển kinh tế',
+      'Là nhiệm vụ riêng của các cơ quan giáo dục',
+    ],
+    correct: 'B',
+    explanation:
+      'Xây dựng con người không phải việc nhất thời hay của riêng một ngành. Đó là yêu cầu khách quan của sự nghiệp cách mạng: vừa cấp bách trước mắt, vừa lâu dài, mang ý nghĩa chiến lược. Các phương án còn lại thu hẹp vai trò ấy vào một thời kỳ, một điều kiện hoặc một cơ quan.',
+    theory: ['Xây dựng con người', 'Cấp bách & lâu dài', 'Ý nghĩa chiến lược'],
+  }),
+  q({
+    team: 'B',
+    number: 1,
+    day: 1,
+    kind: 'THEORY',
+    question: 'Bác Hồ đã trích dẫn luận điểm nổi tiếng nào để nhấn mạnh chiến lược "trồng người"?',
+    options: [
+      '"Vì lợi ích mười năm thì phải trồng cây, vì lợi ích trăm năm thì phải trồng người"',
+      '"Nhất nghệ tinh, nhất thân vinh"',
+      '"Học, học nữa, học mãi"',
+      '"Có chí thì nên"',
+    ],
+    correct: 'A',
+    explanation:
+      'Hồ Chí Minh dẫn luận điểm “trồng cây – trồng người” (giáo trình chú thích ý tưởng gốc của Quản Trọng) để đặt việc bồi dưỡng con người vào tầm nhìn trăm năm: muốn có lợi ích lâu dài thì phải đầu tư cho con người. Các câu còn lại là những châm ngôn quen thuộc về nghề nghiệp, học tập hay ý chí, không nói về chiến lược “trồng người”.',
+    theory: ['Chiến lược “trồng người”', 'Giáo dục', 'Tầm nhìn lâu dài'],
+  }),
+  q({
+    team: 'A',
+    number: 2,
+    day: 1,
+    kind: 'APPLICATION',
+    question: 'Vì sao việc xây dựng con người cần được đặt ra ngay từ đầu trong quá trình xây dựng xã hội?',
+    options: [
+      'Vì con người là yếu tố có thể thay thế bằng công nghệ',
+      'Vì xây dựng con người là một bộ phận của chiến lược phát triển lâu dài',
+      'Vì con người chỉ cần được đào tạo trong giai đoạn đầu',
+      'Vì đây là nhiệm vụ riêng của nhà trường',
+    ],
+    correct: 'B',
+    explanation:
+      'Xây dựng con người là mối quan tâm trung tâm và là một bộ phận của chiến lược phát triển lâu dài, nên cần được đặt ra ngay từ đầu, chứ không phải việc làm một lần, việc làm sau, hay việc giao riêng cho nhà trường.',
+    theory: ['Xây dựng con người', 'Chiến lược lâu dài'],
+  }),
+  q({
+    team: 'B',
+    number: 2,
+    day: 1,
+    kind: 'APPLICATION',
+    question:
+      'Một người biết mình cần thay đổi nhưng luôn chờ người khác nhắc nhở mới hành động. Điều này chưa phù hợp với yêu cầu nào?',
+    options: [
+      'Tính chủ động trong tự rèn luyện và tu dưỡng',
+      'Tinh thần quốc tế',
+      'Phong cách quần chúng',
+      'Tính khoa học của bộ máy',
+    ],
+    correct: 'A',
+    explanation:
+      'Tự rèn luyện, tu dưỡng đòi hỏi cá nhân chủ động nhận ra điều cần thay đổi và tự hành động. Chờ người khác nhắc nhở cho thấy việc rèn luyện vẫn phụ thuộc vào tác động bên ngoài. Các phương án còn lại thuộc những nội dung khác, không trực tiếp nói về tính chủ động của cá nhân.',
+    theory: ['Tự rèn luyện', 'Tu dưỡng', 'Tính chủ động'],
+  }),
+
+  // ─── DAY 07 · PHÁT TRIỂN NĂNG LỰC ───────────────────────────────────
+  q({
+    team: 'A',
+    number: 3,
+    day: 7,
+    kind: 'THEORY',
+    question: 'Yếu tố "Chuyên" trong con người toàn diện nhấn mạnh vào mặt nào?',
+    options: [
+      'Phẩm chất đạo đức và lòng khiêm tốn',
+      'Lòng yêu nước và tinh thần quốc tế',
+      'Tri thức, năng lực, trình độ chuyên môn, nghiệp vụ, ngoại ngữ, sức khỏe',
+      'Tác phong khiêm tốn và lòng vị tha',
+    ],
+    correct: 'C',
+    explanation:
+      '“Chuyên” nhấn mạnh mặt năng lực: tri thức, trình độ chuyên môn, nghiệp vụ, ngoại ngữ và sức khỏe để hoàn thành nhiệm vụ. Các phương án A, B, D nói về phẩm chất, đạo đức, lý tưởng — những nội dung trò chơi khái quát vào mặt “hồng”.',
+    theory: ['“Chuyên”', 'Năng lực', 'Con người toàn diện'],
+  }),
+  q({
+    team: 'B',
+    number: 3,
+    day: 7,
+    kind: 'THEORY',
+    question: 'Trong nội dung xây dựng con người toàn diện, Hồ Chí Minh đặc biệt nhấn mạnh yêu cầu nào?',
+    options: ['Vừa "giàu" vừa "sang"', 'Vừa "mạnh" vừa "khéo"', 'Vừa "hồng" vừa "chuyên"', 'Vừa "nhanh" vừa "chắc"'],
+    correct: 'C',
+    explanation:
+      'Con người toàn diện phải vừa có phẩm chất (“hồng”) vừa có năng lực (“chuyên”); hai mặt gắn bó, không tách rời. Các cặp “giàu – sang”, “mạnh – khéo”, “nhanh – chắc” không phải cách diễn đạt của nội dung này.',
+    theory: ['Vừa “hồng” vừa “chuyên”', 'Con người toàn diện'],
+  }),
+  q({
+    team: 'A',
+    number: 4,
+    day: 7,
+    kind: 'APPLICATION',
+    question:
+      'Một sinh viên có tinh thần trách nhiệm, sống tích cực nhưng lại thiếu kiến thức và năng lực chuyên môn để hoàn thành công việc. Người này đang cần bổ sung chủ yếu yếu tố nào?',
+    options: ['“Hồng”', '“Chuyên”', 'Ý thức tập thể', 'Tinh thần quốc tế'],
+    correct: 'B',
+    explanation:
+      'Tinh thần trách nhiệm và lối sống tích cực là biểu hiện của mặt “hồng” — người này đã có. Điều còn thiếu là kiến thức và năng lực chuyên môn, tức mặt “chuyên”. Con người toàn diện cần cả hai.',
+    theory: ['“Chuyên”', '“Hồng”', 'Con người toàn diện'],
+  }),
+  q({
+    team: 'B',
+    number: 4,
+    day: 7,
+    kind: 'APPLICATION',
+    question:
+      'Một thử thách 30 ngày yêu cầu người tham gia vừa cải thiện kỹ năng chuyên môn, vừa duy trì một thói quen thể hiện trách nhiệm với tập thể. Cách thiết kế này phản ánh rõ nhất:',
+    options: [
+      'Chỉ phát triển “chuyên”',
+      'Chỉ phát triển “hồng”',
+      'Kết hợp phẩm chất và năng lực',
+      'Chỉ tập trung vào kết quả cuối cùng',
+    ],
+    correct: 'C',
+    explanation:
+      'Thử thách vừa rèn kỹ năng chuyên môn (“chuyên”) vừa duy trì thói quen trách nhiệm với tập thể (“hồng”), nên phản ánh sự kết hợp phẩm chất và năng lực. Thử thách 30 ngày ở đây là ví dụ vận dụng do nhóm thiết kế.',
+    theory: ['Vừa “hồng” vừa “chuyên”', 'Phẩm chất & năng lực'],
+  }),
+
+  // ─── DAY 15 · PHẨM CHẤT VÀ TRÁCH NHIỆM ──────────────────────────────
+  q({
+    team: 'A',
+    number: 5,
+    day: 15,
+    kind: 'THEORY',
+    question: 'Yếu tố "Hồng" trong con người toàn diện đề cập đến khía cạnh nào?',
+    options: [
+      'Trình độ khoa học - kỹ thuật và ngoại ngữ',
+      'Phẩm chất, lý tưởng, đạo đức cách mạng, lối sống và bản lĩnh chính trị',
+      'Sức khỏe thể chất và khả năng lao động chân tay',
+      'Bằng cấp chuyên môn và vị trí xã hội',
+    ],
+    correct: 'B',
+    explanation:
+      '“Hồng” đề cập mặt phẩm chất: lý tưởng, đạo đức cách mạng, lối sống và bản lĩnh chính trị. Trình độ, ngoại ngữ, sức khỏe gần với mặt năng lực mà trò chơi khái quát là “chuyên”; bằng cấp hay vị trí xã hội không phải tiêu chí của “hồng”.',
+    theory: ['“Hồng”', 'Đạo đức cách mạng', 'Bản lĩnh chính trị'],
+  }),
+  q({
+    team: 'B',
+    number: 5,
+    day: 15,
+    kind: 'THEORY',
+    question:
+      'Trong các phương pháp xây dựng con người, Hồ Chí Minh đặc biệt đề cao phương pháp nào, nhất là đối với người đứng đầu?',
+    options: [
+      'Răn đe và trừng phạt',
+      'Nêu gương',
+      'Tuyên truyền lý thuyết suông',
+      'Khuyến khích bằng lợi ích vật chất đơn thuần',
+    ],
+    correct: 'B',
+    explanation:
+      'Nêu gương là phương pháp được đặc biệt đề cao: người đi trước, người đứng đầu làm gương bằng hành động cụ thể thì lời nói mới có sức thuyết phục. Răn đe, lý thuyết suông hay lợi ích vật chất đơn thuần không tạo được chuyển biến bền vững.',
+    theory: ['Nêu gương', 'Phương pháp xây dựng con người', 'Người đứng đầu'],
+  }),
+  q({
+    team: 'A',
+    number: 6,
+    day: 15,
+    kind: 'APPLICATION',
+    question:
+      'Một sinh viên có chuyên môn rất tốt nhưng thiếu trách nhiệm với tập thể. Điều này cho thấy vấn đề gì trong yêu cầu xây dựng con người toàn diện?',
+    options: [
+      'Thiếu cả “hồng” và “chuyên”',
+      'Có “hồng” nhưng thiếu “chuyên”',
+      'Có “chuyên” nhưng chưa đáp ứng đầy đủ mặt “hồng”',
+      'Không liên quan đến xây dựng con người',
+    ],
+    correct: 'C',
+    explanation:
+      'Chuyên môn tốt cho thấy mặt “chuyên” đã có. Thiếu trách nhiệm với tập thể là hạn chế ở mặt “hồng” — phẩm chất, lối sống. Con người toàn diện đòi hỏi hai mặt đi cùng nhau.',
+    theory: ['“Hồng”', '“Chuyên”', 'Trách nhiệm'],
+  }),
+  q({
+    team: 'B',
+    number: 6,
+    day: 15,
+    kind: 'APPLICATION',
+    question:
+      'Một trưởng nhóm yêu cầu các thành viên đúng giờ nhưng bản thân thường xuyên đến muộn. Vấn đề này trái với nguyên tắc nào?',
+    options: ['Tự rèn luyện', 'Nêu gương', 'Phong cách quần chúng', 'Tinh thần quốc tế'],
+    correct: 'B',
+    explanation:
+      'Yêu cầu người khác đúng giờ trong khi bản thân thường đến muộn là lời nói không đi đôi với việc làm — trái với nguyên tắc nêu gương. Người đứng đầu cần làm gương trước thì yêu cầu mới có sức thuyết phục.',
+    theory: ['Nêu gương', 'Người đứng đầu', 'Nói đi đôi với làm'],
+  }),
+
+  // ─── DAY 22 · CÁ NHÂN VÀ TẬP THỂ ────────────────────────────────────
+  q({
+    team: 'A',
+    number: 7,
+    day: 22,
+    kind: 'THEORY',
+    question: 'Trong các khía cạnh chủ yếu của con người toàn diện, ý thức làm chủ được thể hiện qua tư tưởng nào?',
+    options: [
+      '"Mỗi người tự lo cho bản thân mình"',
+      '"Mình vì mọi người, mọi người vì mình"',
+      '"Việc ai nấy làm, nhà ai nấy ở"',
+      '"Lợi ích cá nhân là trên hết"',
+    ],
+    correct: 'B',
+    explanation:
+      'Ý thức làm chủ gắn với tinh thần tập thể: mỗi người có trách nhiệm với cộng đồng và cộng đồng quan tâm tới mỗi người. Các phương án còn lại đề cao lối sống cá nhân, tách rời tập thể.',
+    theory: ['Ý thức làm chủ', 'Tinh thần tập thể'],
+  }),
+  q({
+    team: 'B',
+    number: 7,
+    day: 22,
+    kind: 'THEORY',
+    question: 'Ngoài sự tự nỗ lực của cá nhân, quá trình xây dựng con người cần kết hợp chặt chẽ với các yếu tố nào?',
+    options: [
+      'Môi trường, cơ chế, tính khoa học của bộ máy và tạo dựng nền dân chủ',
+      'Sự may mắn và hoàn cảnh ngẫu nhiên',
+      'Tách biệt hoàn toàn khỏi cộng đồng xã hội',
+      'Dựa hoàn toàn vào viện trợ nước ngoài',
+    ],
+    correct: 'A',
+    explanation:
+      'Tự nỗ lực của cá nhân là quan trọng nhưng chưa đủ. Xây dựng con người cần kết hợp với môi trường, cơ chế, tính khoa học của bộ máy và việc tạo dựng nền dân chủ để con người có điều kiện phát triển. Các phương án còn lại phó mặc cho may rủi, tách khỏi cộng đồng hoặc dựa hoàn toàn vào bên ngoài.',
+    theory: ['Môi trường', 'Cơ chế', 'Dân chủ'],
+  }),
+  q({
+    team: 'A',
+    number: 8,
+    day: 22,
+    kind: 'APPLICATION',
+    question:
+      'Một người đặt mục tiêu “30 ngày” nhưng chỉ quan tâm mình có đạt mục tiêu hay không, không quan tâm hành vi đó có ích cho tập thể hay cộng đồng. Điểm nào của nội dung xây dựng con người đang bị xem nhẹ?',
+    options: ['Ý thức làm chủ và tinh thần tập thể', 'Năng lực chuyên môn', 'Phương pháp làm việc', 'Trình độ ngoại ngữ'],
+    correct: 'A',
+    explanation:
+      'Mục tiêu cá nhân có ý nghĩa đầy đủ hơn khi gắn với lợi ích của tập thể và cộng đồng. Chỉ quan tâm mình có đạt hay không là đang xem nhẹ ý thức làm chủ và tinh thần tập thể. Năng lực, phương pháp hay ngoại ngữ không phải vấn đề được nêu trong tình huống.',
+    theory: ['Ý thức làm chủ', 'Tinh thần tập thể'],
+  }),
+  q({
+    team: 'B',
+    number: 8,
+    day: 22,
+    kind: 'APPLICATION',
+    question:
+      'Nếu một cá nhân có ý chí rèn luyện rất tốt nhưng sống trong môi trường thiếu những điều kiện hỗ trợ, điều gì có thể được rút ra?',
+    options: [
+      'Cá nhân không cần môi trường',
+      'Chỉ cần thay đổi cá nhân là đủ',
+      'Xây dựng con người cần kết hợp nỗ lực cá nhân với môi trường và cơ chế phù hợp',
+      'Môi trường quyết định hoàn toàn con người',
+    ],
+    correct: 'C',
+    explanation:
+      'Ý chí cá nhân rất quan trọng, nhưng môi trường và cơ chế phù hợp tạo điều kiện để ý chí đó thành kết quả. Vì vậy cần kết hợp cả hai; tuyệt đối hóa cá nhân (A, B) hay tuyệt đối hóa môi trường (D) đều phiến diện.',
+    theory: ['Tự rèn luyện', 'Môi trường', 'Cơ chế'],
+  }),
+
+  // ─── DAY 30 · FINAL CHALLENGE ×2 ────────────────────────────────────
+  q({
+    team: 'A',
+    number: 9,
+    day: 30,
+    kind: 'THEORY',
+    question:
+      'Yếu tố giữ vai trò quyết định và thể hiện tính chủ động của cá nhân trong phương pháp xây dựng con người là gì?',
+    options: [
+      'Sự áp đặt hoàn toàn từ môi trường xung quanh',
+      'Cá nhân tự rèn luyện, tu dưỡng ý thức',
+      'Chờ đợi sự giúp đỡ thụ động từ tổ chức',
+      'Chỉ phụ thuộc vào bằng cấp giáo dục',
+    ],
+    correct: 'B',
+    explanation:
+      'Giáo dục, môi trường và tổ chức đều có vai trò, nhưng việc mỗi cá nhân tự rèn luyện, tu dưỡng mới là yếu tố quyết định, thể hiện tính chủ động. Không ai rèn luyện thay mình được; áp đặt từ bên ngoài, chờ đợi thụ động hay chỉ dựa vào bằng cấp đều không thay thế được điều đó.',
+    theory: ['Tự rèn luyện', 'Tu dưỡng', 'Tính chủ động'],
+  }),
+  q({
+    team: 'B',
+    number: 9,
+    day: 30,
+    kind: 'THEORY',
+    question: 'Theo tư tưởng Hồ Chí Minh, đâu là phương pháp làm việc cần có của con người xã hội chủ nghĩa?',
+    options: [
+      'Làm việc tự do, không cần kế hoạch hay khuôn khổ',
+      'Phương pháp làm việc khoa học, phong cách quần chúng, dân chủ, nêu gương',
+      'Áp đặt mệnh lệnh từ trên xuống, không nghe ý kiến tập thể',
+      'Chỉ tập trung lý thuyết, không coi trọng thực tiễn',
+    ],
+    correct: 'B',
+    explanation:
+      'Con người xã hội chủ nghĩa cần phương pháp làm việc khoa học, có phong cách quần chúng, dân chủ và nêu gương. Làm việc tùy tiện, áp đặt mệnh lệnh hay xa rời thực tiễn đều trái với yêu cầu đó.',
+    theory: ['Phương pháp làm việc', 'Phong cách quần chúng', 'Dân chủ', 'Nêu gương'],
+  }),
+  q({
+    team: 'A',
+    number: 10,
+    day: 30,
+    kind: 'APPLICATION',
+    question: 'Một thử nghiệm phát triển bản thân chỉ kéo dài 30 ngày. Điều nào cần tránh khi diễn giải kết quả?',
+    options: [
+      'Xem đây là một khoảng thời gian để thử nghiệm',
+      'Theo dõi những thay đổi trong hành vi',
+      'Cho rằng chỉ cần 30 ngày là hoàn tất quá trình xây dựng con người',
+      'Dùng kết quả để phản tỉnh và rút kinh nghiệm',
+    ],
+    correct: 'C',
+    explanation:
+      'Xây dựng con người là quá trình lâu dài. 30 ngày chỉ là khung thử nghiệm do nhóm thiết kế để theo dõi thay đổi và phản tỉnh; không thể coi đó là đã hoàn tất quá trình xây dựng con người. Các phương án A, B, D đều là cách diễn giải phù hợp.',
+    theory: ['Tính lâu dài', 'Tự rèn luyện', 'Phản tỉnh'],
+  }),
+  q({
+    team: 'B',
+    number: 10,
+    day: 30,
+    kind: 'APPLICATION',
+    question:
+      'Một “30-Day Human Development Sprint” phù hợp với logic của lý thuyết nhất khi chuỗi hoạt động được xây dựng theo hướng nào?',
+    options: [
+      'Đọc lý thuyết → kiểm tra → kết thúc',
+      'Đặt mục tiêu lớn → thực hiện tùy hứng → đánh giá',
+      'Chọn giá trị cần rèn luyện → chuyển thành hành vi cụ thể → thực hiện trong 30 ngày → theo dõi → phản tỉnh',
+      'Chờ môi trường thay đổi → bắt đầu rèn luyện',
+    ],
+    correct: 'C',
+    explanation:
+      'Chuỗi hợp lý bắt đầu từ giá trị cần rèn luyện, cụ thể hóa thành hành vi, thực hiện, theo dõi rồi phản tỉnh — gắn nhận thức với hành động và tự điều chỉnh. Đây là cách nhóm vận dụng lý thuyết vào một thử nghiệm 30 ngày, không phải phương pháp do Hồ Chí Minh quy định.',
+    theory: ['Tự rèn luyện', 'Lý luận gắn với thực tiễn', 'Phản tỉnh'],
+  }),
+]
+
+/** Turn order inside each Day: A (1st) → B (1st) → A (2nd) → B (2nd). */
+const DAY_TURNS: { team: Team; slot: 0 | 1 }[] = [
+  { team: 'A', slot: 0 },
+  { team: 'B', slot: 0 },
+  { team: 'A', slot: 1 },
+  { team: 'B', slot: 1 },
+]
+
+export const QUESTIONS_PER_DAY = DAY_TURNS.length
+export const TOTAL_DAYS = DAYS.length
+
+/** The full 20-step play order. */
+export const QUESTION_SEQUENCE: Question[] = DAYS.flatMap(({ day }) =>
+  DAY_TURNS.map(({ team, slot }) => {
+    const found = QUESTIONS.filter((x) => x.day === day && x.team === team).sort((a, b) => a.number - b.number)[slot]
+    if (!found) throw new Error(`Missing question: day ${day}, team ${team}, slot ${slot}`)
+    return found
+  }),
+)
+
+export const TOTAL_STEPS = QUESTION_SEQUENCE.length
+
+export const dayIndexOf = (step: number) => Math.floor(step / QUESTIONS_PER_DAY)
+export const isLastStepOfDay = (step: number) => step % QUESTIONS_PER_DAY === QUESTIONS_PER_DAY - 1
+
+export function multiplierFor(question: Question): number {
+  return DAYS.find((d) => d.day === question.day)?.multiplier ?? 1
+}
+
+export function pointsFor(question: Question, optionId: Option['id']): number {
+  return optionId === question.correct ? CORRECT_POINTS * multiplierFor(question) : 0
 }
 
 export const formatDay = (day: number) => String(day).padStart(2, '0')
