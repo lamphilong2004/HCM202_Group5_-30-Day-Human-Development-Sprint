@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { OUTCOME_LABEL } from '../data/scenarios'
 import type { Outcome, Team } from '../types/game'
 
 export const TEAM_STYLE: Record<
@@ -66,13 +67,7 @@ export function Arrow() {
   )
 }
 
-export const RESULT_LABEL: Record<Outcome, string> = {
-  CORRECT: 'Chính xác',
-  INCORRECT: 'Chưa chính xác',
-  TIMEOUT: 'Hết giờ',
-}
-
-/** Round check / cross / clock mark; `tone` picks contrast for dark or paper surfaces. */
+/** Filled check / outlined check / half disc / cross / clock — one glyph per outcome, never colour alone. */
 export function ResultMark({
   outcome,
   size = 'md',
@@ -84,27 +79,43 @@ export function ResultMark({
 }) {
   const dims = size === 'sm' ? 'size-5' : 'size-9'
   const icon = size === 'sm' ? 'size-3' : 'size-5'
-  const color =
-    outcome === 'CORRECT'
-      ? tone === 'dark'
-        ? 'bg-teal text-ink'
-        : 'bg-teal-deep text-paper'
-      : outcome === 'TIMEOUT'
-        ? 'border-2 border-dashed border-red/70 text-red'
-        : tone === 'dark'
-          ? 'border-2 border-line text-mist'
-          : 'border-2 border-stone/40 text-stone'
+  const dark = tone === 'dark'
+  const color = {
+    BEST: dark ? 'bg-teal text-ink' : 'bg-teal-deep text-paper',
+    GOOD: dark ? 'border-2 border-teal text-teal' : 'border-2 border-teal-deep text-teal-deep',
+    PARTIAL: dark ? 'border-2 border-fog/70 text-fog' : 'border-2 border-stone/60 text-stone',
+    UNSUITABLE: dark ? 'border-2 border-line text-mist' : 'border-2 border-stone/40 text-stone',
+    TIMEOUT: 'border-2 border-dashed border-red/70 text-red',
+  }[outcome]
   return (
     <span
       role="img"
-      aria-label={RESULT_LABEL[outcome]}
+      aria-label={OUTCOME_LABEL[outcome]}
       className={`${dims} ${color} inline-grid shrink-0 place-items-center rounded-full`}
     >
       <svg viewBox="0 0 16 16" className={icon} fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
-        {outcome === 'CORRECT' && <path d="m3.5 8.5 3 3 6-7" strokeLinecap="round" strokeLinejoin="round" />}
-        {outcome === 'INCORRECT' && <path d="M5 5l6 6M11 5l-6 6" strokeLinecap="round" />}
+        {(outcome === 'BEST' || outcome === 'GOOD') && (
+          <path d="m3.5 8.5 3 3 6-7" strokeLinecap="round" strokeLinejoin="round" />
+        )}
+        {outcome === 'PARTIAL' && <path d="M8 2.5a5.5 5.5 0 0 0 0 11Z" fill="currentColor" stroke="none" />}
+        {outcome === 'UNSUITABLE' && <path d="M5 5l6 6M11 5l-6 6" strokeLinecap="round" />}
         {outcome === 'TIMEOUT' && <path d="M8 4.5V8l2.5 1.5" strokeLinecap="round" strokeLinejoin="round" />}
       </svg>
+    </span>
+  )
+}
+
+const METER_FILL: Record<Outcome, number> = { BEST: 3, GOOD: 2, PARTIAL: 1, UNSUITABLE: 0, TIMEOUT: 0 }
+
+/** Three-step suitability meter: ●●● best · ●●○ good · ●○○ partial · ○○○ unsuitable / timeout. */
+export function LevelMeter({ outcome, size = 'md' }: { outcome: Outcome; size?: 'sm' | 'md' }) {
+  const fill = METER_FILL[outcome]
+  const dims = size === 'sm' ? 'h-1.5 w-4' : 'h-2 w-8'
+  return (
+    <span className="inline-flex gap-1" aria-hidden>
+      {[1, 2, 3].map((i) => (
+        <span key={i} className={`${dims} rounded-full ${i <= fill ? 'bg-teal' : 'bg-line'}`} />
+      ))}
     </span>
   )
 }

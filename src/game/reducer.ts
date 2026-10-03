@@ -44,15 +44,13 @@ function lockQuestion(state: GameState, optionId: OptionId | null): GameState {
   const question = QUESTION_SEQUENCE[state.step]
   if (state.history.some((h) => h.questionId === question.id)) return state
 
-  const points = optionId ? pointsFor(question, optionId) : 0
-  const outcome = optionId === null ? 'TIMEOUT' : optionId === question.correct ? 'CORRECT' : 'INCORRECT'
+  const { outcome, points } = pointsFor(question, optionId)
   const record: AnswerRecord = {
     questionId: question.id,
     day: question.day,
     team: question.team,
     optionId,
     outcome,
-    correct: outcome === 'CORRECT',
     points,
   }
   return {

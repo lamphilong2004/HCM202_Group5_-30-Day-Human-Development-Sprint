@@ -1,6 +1,6 @@
-import { CORRECT_POINTS, DAYS, QUESTIONS_PER_TEAM, formatDay } from '../data/scenarios'
+import { DAYS, LEVELS, LEVEL_POINTS, MAX_SCORE_PER_TEAM, OUTCOMES, OUTCOME_LABEL, formatDay } from '../data/scenarios'
 import { QUESTION_SECONDS } from '../game/timing'
-import { Arrow, Button, RESULT_LABEL, ResultMark } from './ui'
+import { Arrow, Button, ResultMark } from './ui'
 
 export function StartScreen({ onStart }: { onStart: () => void }) {
   return (
@@ -16,12 +16,12 @@ export function StartScreen({ onStart }: { onStart: () => void }) {
         </p>
         <div className="mt-8 max-w-2xl animate-fade-up space-y-3 text-lg leading-relaxed text-mist [animation-delay:180ms]">
           <p>Hai đội lần lượt trải qua 5 mốc của hành trình 30 ngày; mỗi mốc có 4 câu, luân phiên A → B → A → B.</p>
-          <p>Mỗi đội nhận 10 câu khác nhau: 5 câu lý thuyết và 5 câu vận dụng.</p>
+          <p>Mỗi đội nhận 10 tình huống khác nhau; mỗi tình huống có 4 phương án với 4 mức độ phù hợp.</p>
           <p>
             Mỗi câu có {QUESTION_SECONDS} giây. Bấm một phương án là chốt đáp án; hết giờ mà chưa trả lời thì được 0
             điểm.
           </p>
-          <p>Sau mỗi câu, trò chơi giải thích đáp án và liên hệ với nội dung xây dựng con người.</p>
+          <p>Sau mỗi câu, MC phân tích lựa chọn và liên hệ với nội dung xây dựng con người.</p>
         </div>
         <div className="mt-10 animate-fade-up [animation-delay:240ms]">
           <Button onClick={onStart} className="px-10 py-5 text-lg">
@@ -52,21 +52,24 @@ export function StartScreen({ onStart }: { onStart: () => void }) {
 
         <div className="rounded-2xl border border-line p-6 sm:p-8">
           <div className="eyebrow text-mist">Cách tính điểm</div>
-          <ul className="mt-4 space-y-3">
-            {(['CORRECT', 'INCORRECT', 'TIMEOUT'] as const).map((outcome) => (
+          <ul className="mt-4 space-y-2.5">
+            {OUTCOMES.map((outcome) => (
               <li key={outcome} className="flex items-center gap-4">
                 <ResultMark outcome={outcome} size="sm" />
                 <span className="flex-1 text-base text-fog">
-                  {RESULT_LABEL[outcome]}
+                  {OUTCOME_LABEL[outcome]}
                   {outcome === 'TIMEOUT' && ` (quá ${QUESTION_SECONDS} giây)`}
                 </span>
-                <span className="tabular font-semibold text-paper">+{outcome === 'CORRECT' ? CORRECT_POINTS : 0}</span>
+                <span className="tabular w-10 text-right font-semibold text-paper">
+                  {outcome === 'TIMEOUT' ? 0 : LEVEL_POINTS[outcome]}
+                </span>
               </li>
             ))}
           </ul>
           <p className="mt-4 text-sm text-mist">
-            Day 30 là thử thách cuối: điểm nhân đôi (+{CORRECT_POINTS * 2}). Tối đa mỗi đội:{' '}
-            {CORRECT_POINTS * (QUESTIONS_PER_TEAM + 2)} điểm.
+            <span className="font-semibold text-amber">Day 30 nhân đôi điểm:</span>{' '}
+            {LEVELS.map((l) => LEVEL_POINTS[l] * 2).join(' / ')}. Không có điểm thưởng tốc độ. Tối đa mỗi đội:{' '}
+            {MAX_SCORE_PER_TEAM} điểm.
           </p>
         </div>
       </aside>

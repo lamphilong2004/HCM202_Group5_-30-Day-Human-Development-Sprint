@@ -2,11 +2,18 @@ export type Team = 'A' | 'B'
 
 export type OptionId = 'A' | 'B' | 'C' | 'D'
 
+/** The learning objective's original form in the approved bank (kept for traceability). */
 export type QuestionKind = 'THEORY' | 'APPLICATION'
+
+/** Suitability rubric: every question has exactly one option at each level. */
+export type Level = 'BEST' | 'GOOD' | 'PARTIAL' | 'UNSUITABLE'
 
 export type Option = {
   id: OptionId
   text: string
+  level: Level
+  /** Why this option earns its points — shown when a team picks it. */
+  explanation: string
 }
 
 export type Question = {
@@ -17,9 +24,11 @@ export type Question = {
   number: number
   day: number
   kind: QuestionKind
+  /** HCM202 learning objective carried over from the approved question bank. */
+  objective: string
   question: string
   options: [Option, Option, Option, Option]
-  correct: OptionId
+  /** “Vì sao?” — the theory behind the rubric. */
   explanation: string
   theory: string[]
 }
@@ -36,7 +45,7 @@ export type Screen = 'START' | 'QUESTION' | 'FEEDBACK' | 'DAY_COMPLETE' | 'FINAL
 
 export type Scores = Record<Team, number>
 
-export type Outcome = 'CORRECT' | 'INCORRECT' | 'TIMEOUT'
+export type Outcome = Level | 'TIMEOUT'
 
 export type AnswerRecord = {
   questionId: string
@@ -45,8 +54,6 @@ export type AnswerRecord = {
   /** null when the team ran out of time without answering. */
   optionId: OptionId | null
   outcome: Outcome
-  /** True only for CORRECT; TIMEOUT counts as not correct in all statistics. */
-  correct: boolean
   points: number
 }
 

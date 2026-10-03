@@ -1,4 +1,4 @@
-import { formatDay } from '../data/scenarios'
+import { OUTCOME_LABEL, formatDay } from '../data/scenarios'
 import type { AnswerRecord, DayInfo, Scores } from '../types/game'
 import { Arrow, Button, ResultMark, TEAM_STYLE, TeamMark } from './ui'
 
@@ -24,7 +24,6 @@ export function DayCompleteScreen({ dayInfo, nextDay, scores, history, onNext }:
       <div className="mt-10 grid w-full animate-fade-up gap-4 [animation-delay:180ms] sm:grid-cols-2">
         {(['A', 'B'] as const).map((team) => {
           const recs = history.filter((h) => h.day === dayInfo.day && h.team === team)
-          const correct = recs.filter((r) => r.correct).length
           const earned = recs.reduce((sum, r) => sum + r.points, 0)
           return (
             <div key={team} className={`rounded-2xl border-t-4 ${TEAM_STYLE[team].border} bg-ink-2 p-6 text-left`}>
@@ -40,7 +39,7 @@ export function DayCompleteScreen({ dayInfo, nextDay, scores, history, onNext }:
                   ))}
                 </span>
                 <span>
-                  Day {formatDay(dayInfo.day)}: {correct}/{recs.length} chính xác · +{earned}
+                  Day {formatDay(dayInfo.day)}: {recs.map((r) => OUTCOME_LABEL[r.outcome]).join(' · ')} · +{earned}
                 </span>
               </div>
             </div>

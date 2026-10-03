@@ -3,7 +3,7 @@
 **HCM202 – Tư tưởng Hồ Chí Minh · SE1823 · Nhóm 05 · Topic ID: HCM-TT-C6-03**
 Chủ đề: *30-Day Human Development Sprint*
 
-Web game tương tác dùng để demo trên lớp: hai đội lần lượt trải qua 5 mốc của một hành trình 30 ngày mô phỏng, trả lời 20 câu hỏi trắc nghiệm (lý thuyết và vận dụng); sau mỗi câu, trò chơi giải thích đáp án và liên hệ với nội dung xây dựng con người — “hồng”, “chuyên”, tự rèn luyện, tu dưỡng, nêu gương, môi trường.
+Web game tương tác dùng để demo trên lớp: hai đội lần lượt trải qua 5 mốc của một hành trình 30 ngày mô phỏng, giải quyết 20 tình huống ra quyết định, mỗi tình huống có 4 phương án ứng với 4 mức độ phù hợp (100 / 50 / 30 / 0 điểm). Sau mỗi câu, MC phân tích lựa chọn và liên hệ với nội dung xây dựng con người — “hồng”, “chuyên”, tự rèn luyện, tu dưỡng, nêu gương, môi trường.
 
 > **Lưu ý học thuật.** “30 ngày” là khung mô phỏng do Nhóm 05 thiết kế, **không** phải khoảng thời gian hay phương pháp được Hồ Chí Minh quy định. Tham chiếu lý luận: Giáo trình HCM202 (2019), Chương VI, mục III. Điểm số chỉ là cơ chế trò chơi, không đánh giá phẩm chất của người chơi.
 
@@ -41,7 +41,7 @@ START
  → FINAL RESULT → REFLECTION → CHƠI LẠI / VỀ MÀN HÌNH ĐẦU
 ```
 
-- 20 câu, 5 Day × 4 câu. Mỗi đội 10 câu khác nhau (5 lý thuyết, 5 vận dụng); hai đội không bao giờ trả lời cùng một câu.
+- 20 câu, 5 Day × 4 câu. Mỗi đội 10 câu khác nhau (5 câu nền tảng lý luận, 5 câu vận dụng); hai đội không bao giờ trả lời cùng một câu.
 - Màn câu hỏi hiển thị Day, đội đang lượt, *Câu X/10* của đội, *Tiến độ X/20* và đồng hồ đếm ngược.
 
 ### 30-Second Battle Mode
@@ -50,9 +50,9 @@ Mỗi lượt diễn ra như sau:
 
 ```
 Câu hỏi hiện ra → đồng hồ 00:30 tự chạy
-   ├─ Đội bấm A/B/C/D  → chốt ngay (không có bước xác nhận) → chấm theo đáp án
+   ├─ Đội bấm A/B/C/D  → chốt ngay (không có bước xác nhận) → chấm theo bậc phù hợp 100/50/30/0
    └─ Về 00:00 chưa bấm → tự khóa câu, ghi HẾT GIỜ, +0 điểm
-→ Màn kết quả (đáp án, Vì sao?, Liên hệ lý luận) — KHÔNG giới hạn thời gian, MC giảng giải
+→ Màn kết quả (bậc phù hợp, điểm, phương án phù hợp nhất, Vì sao?, Liên hệ lý luận) — KHÔNG giới hạn thời gian, MC giảng giải
 → MC bấm “Tiếp tục” → câu tiếp theo với đồng hồ 00:30 mới
    (sau câu thứ 4 của mỗi Day: màn Day Complete → MC bấm “Chặng tiếp theo”)
 ```
@@ -64,17 +64,34 @@ Câu hỏi hiện ra → đồng hồ 00:30 tự chạy
 - Đồng hồ không dừng khi chuyển tab hay thu nhỏ trình duyệt; đồng hồ chỉ chạy trên màn câu hỏi, không chạy ở màn kết quả, Day Complete, kết quả chung cuộc hay phản tỉnh.
 - **Không có chuyển màn tự động nào ngoài cơ chế hết giờ của câu hỏi.** Màn kết quả đứng yên cho tới khi MC bấm **Tiếp tục**; Day Complete đứng yên cho tới khi MC bấm **Chặng tiếp theo**.
 
-Kỹ thuật: reducer lưu thời điểm hết hạn của câu hỏi (`questionDeadline`) và mọi hành động có thời gian đều mang `at = Date.now()` cùng `step` của câu. Cú bấm xử lý tại hoặc sau hạn được tính là hết giờ; cú bấm hoặc hẹn giờ cũ của câu trước bị bỏ qua, và bấm đúp **Tiếp tục** chỉ chuyển màn một lần, nên không thể cộng điểm hai lần hay nhảy cóc lượt. Cú bấm vào phương án trong 0,4 giây đầu sau khi câu hỏi hiện ra bị bỏ qua, để lần bấm thứ hai của một cú bấm đúp **Tiếp tục** không vô tình trả lời câu mới.
+Kỹ thuật: reducer lưu thời điểm hết hạn của câu hỏi (`questionDeadline`) và mọi hành động có thời gian đều mang `at = Date.now()` cùng `step` của câu. Cú bấm xử lý tại hoặc sau hạn được tính là hết giờ; cú bấm hoặc hẹn giờ cũ của câu trước bị bỏ qua, và bấm đúp **Tiếp tục** chỉ chuyển màn một lần, nên không thể cộng điểm hai lần hay nhảy cóc lượt. Các nút phương án bị vô hiệu hóa (disabled) trong 0,4 giây đầu sau khi câu hỏi hiện ra, để lần bấm thứ hai của một cú bấm đúp **Tiếp tục** không vô tình trả lời câu mới.
 
-### Tính điểm
+### Tính điểm theo bậc phù hợp (100 / 50 / 30 / 0)
 
-| Kết quả          | Day 01–22 | Day 30 (×2) |
-| ---------------- | --------- | ----------- |
-| Chính xác        | +100      | +200        |
-| Chưa chính xác   | +0        | +0          |
-| Hết giờ          | +0        | +0          |
+**Vì sao chấm nhiều bậc?** Tự rèn luyện trong đời sống hiếm khi là chuyện “đúng/sai” tuyệt đối: một lựa chọn có thể có điểm mạnh rõ ràng nhưng còn hạn chế, hoặc có yếu tố tích cực nhưng còn thiếu nhiều. Vì vậy mỗi câu là một **tình huống ra quyết định**, và bốn phương án thể hiện bốn mức độ phù hợp khác nhau thật sự. Nhóm **không** cho điểm một phần cho một nhận định sai về kiến thức: các câu trắc nghiệm kiến thức trước đây đã được chuyển thành tình huống, giữ nguyên mục tiêu học tập.
 
-Điểm tối đa mỗi đội: 8 × 100 + 2 × 200 = **1200**. Không có điểm thưởng tốc độ.
+| Bậc | Nhãn | Day 01–22 | Day 30 (×2) | Tiêu chí |
+| --- | --- | ---: | ---: | --- |
+| BEST | Phù hợp nhất | 100 | 200 | Đáp ứng đầy đủ yêu cầu lý luận của tình huống |
+| GOOD | Khá phù hợp | 50 | 100 | Có điểm mạnh rõ ràng nhưng còn hạn chế đáng kể |
+| PARTIAL | Phù hợp một phần | 30 | 60 | Có yếu tố tích cực nhưng còn thiếu nhiều |
+| UNSUITABLE | Chưa phù hợp | 0 | 0 | Đi ngược yêu cầu của tình huống |
+| TIMEOUT | Hết giờ | 0 | 0 | Nhóm chưa trả lời trong 30 giây |
+
+- Mỗi câu có **đúng một** phương án ở mỗi bậc; vị trí A/B/C/D của các bậc được xáo trộn (mỗi bậc nằm ở mỗi vị trí đúng 5 lần).
+- Điểm chỉ được tính bởi một hàm duy nhất `pointsFor()` trong `src/data/scenarios.ts` (bậc × hệ số Day). Không có điểm thưởng tốc độ.
+- Điểm tối đa mỗi đội: 8 × 100 + 2 × 200 = **1200**. Mọi câu “Khá phù hợp”: 600; mọi câu “Phù hợp một phần”: 360.
+
+Ví dụ — câu A03 (Day 07, mục tiêu học tập: nội dung của “chuyên”): *“Một sinh viên muốn phát triển mặt ‘chuyên’ trong 30-Day Sprint. Kế hoạch nào phù hợp nhất?”*
+
+| Phương án | Bậc | Điểm |
+| --- | --- | ---: |
+| Học sâu chuyên môn, luyện ngoại ngữ, giữ sức khỏe — có mục tiêu đo được mỗi tuần | Phù hợp nhất | 100 |
+| Học sâu chuyên môn mỗi ngày, tạm gác ngoại ngữ và sức khỏe | Khá phù hợp | 50 |
+| Xem video kỹ năng khi rảnh, không đặt mục tiêu cụ thể | Phù hợp một phần | 30 |
+| Chỉ tập trung rèn đạo đức, vì năng lực sẽ tự đến sau | Chưa phù hợp | 0 |
+
+Màn kết quả luôn hiển thị: phương án đội đã chọn, bậc phù hợp, số điểm, **vì sao phương án đó được số điểm ấy**, phương án phù hợp nhất (100 điểm), *Vì sao?* và *Liên hệ lý luận HCM202*. Kết quả chung cuộc thống kê số câu ở từng bậc và số câu hết giờ của mỗi đội.
 
 ## Hướng dẫn demo trên lớp
 
@@ -92,8 +109,8 @@ src/
   App.tsx                    Điều phối màn hình theo state
   main.tsx                   Entry point
   index.css                  Tailwind v4 + design tokens + animation
-  types/game.ts              Team, OptionId, Question, AnswerRecord, GameState…
-  data/scenarios.ts          Ngân hàng 20 câu, 5 Day, thứ tự A→B→A→B, cách tính điểm, câu phản tỉnh
+  types/game.ts              Team, Level, Outcome, Option, Question, AnswerRecord, GameState…
+  data/scenarios.ts          20 tình huống + thang 100/50/30/0, 5 Day, thứ tự A→B→A→B, pointsFor(), câu phản tỉnh
   game/reducer.ts            State machine (START → QUESTION → FEEDBACK → DAY_COMPLETE → FINAL_RESULT → REFLECTION), chấm điểm, hạn giờ
   game/timing.ts             30 giây/câu, định dạng 00:SS
   hooks/useDeadline.ts       Đếm ngược theo mốc thời gian thực (không trôi, kiểm tra lại khi quay lại tab)
@@ -110,7 +127,7 @@ src/
     DayCompleteScreen.tsx
     FinalResultScreen.tsx
     ReflectionScreen.tsx
-    ui.tsx                   Button, TeamMark, ResultMark, màu theo đội
+    ui.tsx                   Button, TeamMark, ResultMark (5 kết quả), LevelMeter, màu theo đội
 ```
 
 Mọi chuyển trạng thái đi qua `gameReducer` và được chặn theo màn hình hiện tại, nên bấm đúp hay bấm lặp không thể cộng điểm hai lần cho cùng một câu.
@@ -119,9 +136,9 @@ Mọi chuyển trạng thái đi qua `gameReducer` và được chặn theo màn
 
 ### Nguồn câu hỏi
 
-- Câu hỏi, phương án và đáp án: ngân hàng 20 câu do Nhóm 05 duyệt, giữ nguyên văn.
-- Phần *Vì sao?* do nhóm soạn và đã đối chiếu với nguồn học thuật bên dưới.
-- Các câu vận dụng về “30 ngày” là ví dụ do nhóm xây dựng, không phải phương pháp do Hồ Chí Minh quy định.
+- 20 tình huống được Nhóm 05 phát triển từ ngân hàng 20 câu đã duyệt: mỗi câu giữ nguyên **mục tiêu học tập** (lưu trong trường `objective`), đội, Day và loại câu; phần câu hỏi và bốn phương án được viết lại thành tình huống ra quyết định để chấm theo bậc.
+- Phần *Vì sao?* dùng lại các giải thích đã được nhóm đối chiếu với nguồn học thuật bên dưới; mỗi phương án có thêm một câu giải thích vì sao được số điểm đó.
+- Các tình huống, thang điểm và mô hình “30 ngày” là thiết kế vận dụng của nhóm, không phải nội dung hay phương pháp do Hồ Chí Minh quy định. Lý luận gốc là phần nội dung xây dựng con người trong giáo trình; trò chơi chỉ là cách nhóm đưa lý luận đó vào các lựa chọn cụ thể.
 
 ### Nguồn học thuật
 

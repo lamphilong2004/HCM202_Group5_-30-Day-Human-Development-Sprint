@@ -1,4 +1,4 @@
-import { DAYS, QUESTIONS_PER_TEAM, formatDay } from '../data/scenarios'
+import { DAYS, OUTCOMES, OUTCOME_LABEL, QUESTIONS_PER_TEAM, formatDay } from '../data/scenarios'
 import { useCountUp } from '../hooks/useCountUp'
 import type { AnswerRecord, Scores, Team } from '../types/game'
 import { Arrow, Button, ResultMark, TEAM_STYLE, TeamMark } from './ui'
@@ -48,9 +48,15 @@ function FinalScore({
         </span>
         <span className="eyebrow text-mist">Points</span>
       </div>
-      <div className="mt-3 text-sm text-mist">
-        {count('CORRECT')}/{QUESTIONS_PER_TEAM} câu chính xác · {count('INCORRECT')} chưa chính xác · {count('TIMEOUT')} hết giờ
-      </div>
+      <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-2 border-t border-line pt-4 text-sm sm:grid-cols-3" aria-label={`Thống kê ${QUESTIONS_PER_TEAM} câu`}>
+        {OUTCOMES.map((o) => (
+          <li key={o} className="flex items-center gap-2" data-outcome={o}>
+            <ResultMark outcome={o} size="sm" />
+            <span className="text-mist">{OUTCOME_LABEL[o]}</span>
+            <span className="tabular ml-auto font-semibold text-paper sm:ml-1">{count(o)}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
